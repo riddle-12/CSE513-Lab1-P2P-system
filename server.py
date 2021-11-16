@@ -28,6 +28,50 @@ class server:
         self.file_chunk = file_chunk # dict(filename : chunk_num)     (filename : list of chunk_hash_value)
         self.file_client_chunk = file_client_chunk # dict(filename : dict(dict(ip+port_string) : list[chunk]) ) 
 
+class causal_consistency:
+    def __init__(self, filename, chunk_num, chunk_hash, client_ip, client_port):
+        self.filename = filename
+        self.chunk_num = chunk_num
+        self.chunk_hash = chunk_hash
+        self.client_ip = client_ip
+        self.client_port = client_port
+        self.datacenter_id = 0
+        self.causal_consistency_dict = {}
+        self.version_dict = {}
+        self.version_dict[self.filename] = 0   # version number of file
+    def get_version(self, filename):
+        return self.version_dict[filename]
+
+    def update_version(self, filename):
+        self.version_dict[filename] += 1
+        return self.version_dict[filename]
+
+    def k_v_pair(k, v):
+        return k + v
+    
+    def write(key, value):
+        self.causal_consistency_dict[key] = value
+        return self.causal_consistency_dict[key]
+    
+    def read(key):
+        return self.causal_consistency_dict[key]
+        
+    def receive_message(conn, message):
+        global lamport_time
+        lamport_time = message['time']
+        return message
+
+    def send_message(conn, message):
+        global lamport_time
+        lamport_time += 1
+        message['time'] = lamport_time
+        conn.send(pickle.dumps(message))
+    
+    def add_kv_pair(self, k, v):
+        return k + v
+    
+    def get_kv_pair(self, k):
+        return k
 
 def Requesthandler(cur_server, conn, addr):
     #print('Enter the handler')
