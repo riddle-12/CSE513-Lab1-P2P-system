@@ -14,7 +14,7 @@ PORT1 = 42000 # server's port number
 PORT2 = 42010 
 PORT3 = 42020 
 size = 128
-PORT = list(42000, 42010, 42020)
+PORT = [42000, 42010, 42020]
 
 '''
 Datacenter:
@@ -30,21 +30,24 @@ class datacenter:
         self.datacenter_port = datacenter_port #current datacenter port number
         self.key_vlaue_version = key_value_version # dict(list)--(key1:(value1,version1), key2:(value2,version2)
         # self.client_lists = client_lists # (???)
-
+lamport_time=0
 class LamportClock:
     def __init__(self):
-        self.time = 0
-        global lamport_time
+        self.time = 0 
 
     def receive_message(message):
+        global lamport_time
         recv_time = message['time']
-        if recv_time > LamportClock.lamport_time:
+        if recv_time > lamport_time:
             lamport_time = recv_time
         return message
 
     def send_message(message):
-        LamportClock.lamport_time += 1
-        message['time'] = LamportClock.lamport_time
+        global lamport_time
+        print('Current time:', lamport_time)
+        lamport_time += 1
+        print('Time is now:', lamport_time)
+        message['time'] = lamport_time
         return message
 
 
@@ -66,7 +69,7 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                     LamportClock.receive_message(request_argu)
                     key_value = cur_datacenter.key_value_version.get(read_key)[1]   # ???
                     conn.sendall(pickle.dumps('Read(key=', read_key, ', value=', key_value))
-                    version = list(LamportClock.lamport_time, cur_datacenter.id)
+                    version = list(lamport_time, cur_datacenter.id)
                     client_list.append((read_key, version))
                     print('Appended', (read_key, version), 'to this client_list!')
 
@@ -127,7 +130,7 @@ def dependency_check(cur_datacenter, client_list):
 if __name__ == "__main__":
 
     '''Initialize the datacenter'''
-    cur_ID = input('Please enter current datacenter ID to initialize:')
+    cur_ID = int(input('Please enter current datacenter ID to initialize:'))
     cur_datacenter_port = PORT[cur_ID]
     cur_datacenter = datacenter(cur_ID, cur_datacenter_port, dict())
     

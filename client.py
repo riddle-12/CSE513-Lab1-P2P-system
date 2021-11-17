@@ -12,7 +12,7 @@ SERVER_HOST = '127.0.0.1'  # server's host address
 SERVER_PORT1 = 42000 # server's port number
 SERVER_PORT2 = 42010 
 SERVER_PORT3 = 42020
-SERVER_PORT = list(42000, 42010, 42020) 
+SERVER_PORT = [42000, 42010, 42020] 
 
 #client_port = 43000
 client_hostname = socket.gethostname() # client hostname
@@ -32,7 +32,7 @@ class client:
 if __name__ == "__main__":
     cur_client = client(client_IP, client_port)
     
-    datacenter_id = input("Please enter the ID of dataserver you want to connect(0/1/2):")
+    datacenter_id = int(input("Please enter the ID of dataserver you want to connect(0/1/2):"))
     server_port = SERVER_PORT[datacenter_id]
 
     ##create a socket for communicating with server
