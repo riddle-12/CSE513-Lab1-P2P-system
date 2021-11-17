@@ -95,18 +95,13 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                 client_list = request_argu[3]
                 write_key = request_argu[1]
                 write_value = request_argu[2]
-                LamportClock.send_message(request_argu)
                 # dependency check   # if satisfy, commit the write request  # if not, delay until get satisfied
                 while dependency_check(cur_datacenter, client_list) == 0:
-                    buf = dict()
-                    buf[write_key] = list(write_value, client_list[1])
-                
-                cur_datacenter.key_value_version[write_key] = list(write_value, client_list[1])
-
-               
-
-                
-
+                    print('Dependency condition is not satisfied, wait--')
+                    #buf = dict()
+                    #buf[write_key] = list(write_value, client_list[1])
+                if dependency_check(cur_datacenter, client_list) == 1:
+                    cur_datacenter.key_value_version[write_key] = list(write_value, client_list[1]) 
               
                   
  
