@@ -69,7 +69,7 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                     LamportClock.receive_message(request_argu)
                     key_value = cur_datacenter.key_value_version.get(read_key)[1]   # ???
                     conn.sendall(pickle.dumps('Read(key=', read_key, ', value=', key_value))
-                    version = list(lamport_time, cur_datacenter.id)
+                    version = [lamport_time, cur_datacenter.id]
                     client_list.append((read_key, version))
                     print('Appended', (read_key, version), 'to this client_list!')
 
@@ -79,7 +79,7 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                 LamportClock.send_message(request_argu)
                 print('Received a write request from client on key =', write_key, 'change value to', write_value, 'Lamport Clock Value is', lamport_time)
                 # update the stored key value
-                version = list(LamportClock.lamport_time, cur_datacenter.id)
+                version = [LamportClock.lamport_time, cur_datacenter.id]
                 cur_datacenter.key_value_version[write_key] = (write_value, version)
                 # propogate the replicated write request to other datacenter
                 for i in range(len(PORT)):
@@ -105,7 +105,7 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                     #buf = dict()
                     #buf[write_key] = list(write_value, client_list[1])
                 if dependency_check(cur_datacenter, client_list) == 1:
-                    cur_datacenter.key_value_version[write_key] = list(write_value, client_list[1]) 
+                    cur_datacenter.key_value_version[write_key] = [write_value, client_list[1]] 
               
                   
  
@@ -133,8 +133,9 @@ if __name__ == "__main__":
     cur_ID = int(input('Please enter current datacenter ID to initialize:'))
     cur_datacenter_port = PORT[cur_ID]
     cur_datacenter = datacenter(cur_ID, cur_datacenter_port, dict())
-    
-
+    cur_datacenter.key_value_version['x'] = ('0', [0, cur_ID])
+    cur_datacenter.key_value_version['y'] = ('0', [0, cur_ID])
+    cur_datacenter.key_value_version['z'] = ('0', [0, cur_ID])
 
     '''create a server socket to listen on'''
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
