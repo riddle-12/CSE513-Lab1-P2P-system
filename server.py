@@ -132,10 +132,8 @@ if __name__ == "__main__":
     '''Initialize the datacenter'''
     cur_ID = int(input('Please enter current datacenter ID to initialize:'))
     cur_datacenter_port = PORT[cur_ID]
-    cur_datacenter = datacenter(cur_ID, cur_datacenter_port, dict())
-    cur_datacenter.key_value_version['x'] = ('0', [0, cur_ID])
-    cur_datacenter.key_value_version['y'] = ('0', [0, cur_ID])
-    cur_datacenter.key_value_version['z'] = ('0', [0, cur_ID])
+    tmp = {'x': (0, [0, cur_ID]), 'y': (0, [0, cur_ID]), 'z': (0, [0, cur_ID])}
+    cur_datacenter = datacenter(cur_ID, cur_datacenter_port, tmp)
 
     '''create a server socket to listen on'''
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
