@@ -28,7 +28,7 @@ class datacenter:
     def __init__(self, id, datacenter_port, key_value_version):
         self.id = id   # current datacenter ID
         self.datacenter_port = datacenter_port #current datacenter port number
-        self.key_vlaue_version = key_value_version # list(list)--(key1,value1,version1), (key2,value2,version2)
+        self.key_vlaue_version = key_value_version # dict(list)--(key1:(value1,version1), key2:(value2,version2)
         # self.client_lists = client_lists # (???)
 
 class LamportClock:
@@ -47,6 +47,7 @@ class LamportClock:
         message['time'] = lamport_time
         return message
 
+
 def Requesthandler(cur_datacenter, conn, addr, client_list):
     print('Enter the handler')
     while True:
@@ -59,11 +60,11 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
             if request_argu[0] == 'read': # 'read' read_key
                 print('Received a read request from client on key =', request_argu[1])
                 read_key = request_argu[1]
-                if cur_datacenter.key_value_version. == None:  ???
+                if cur_datacenter.key_value_version.get(read_key) == None: 
                     conn.sendall(pickle.dumps('There is no such key in this datacenter!'))
                 else:
                     LamportClock.receive_message(request_argu)
-                    key_value = cur_datacenter.keyvalue.get(read_key)   ???
+                    key_value = cur_datacenter.key_value_version.get(read_key)[1]   # ???
                     conn.sendall(pickle.dumps('Read(key=', read_key, ', value=', key_value))
                     version = list(timestamp, cur_datacenter.id) ?????
                     client_list.append((read_key, version))
@@ -73,9 +74,10 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                 write_key = request_argu[1]
                 write_value = request_argu[2]
                 LamportClock.send_message(request_argu)
-                print('Received a write request from client on key =', write_key, 'change value to', write_value,'Lamport Clock Value is', lamport_time)
+                print('Received a write request from client on key =', write_key, 'change value to', write_value, 'Lamport Clock Value is', lamport_time)
                 # update the stored key value
-                cur_datacenter.keyvalue[write_key] = write_value
+                version = list(timestamp, cur_datacenter.id)   ????
+                cur_datacenter.key_value_version[write_key] = (write_value, version)
                 # propogate the replicated write request to other datacenter
                 for i in range(len(PORT)):
                     while i != cur_datacenter.id:
@@ -87,7 +89,6 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                             print('Sent out the replicated write request!')
                 # update current client_list
                 client_list = []
-                version = list(timestamp, cur_datacenter.id)   ????
                 client_list.append((write_key, version))
 
             if request_argu[0] == 'replicated write request':
@@ -95,11 +96,16 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                 write_key = request_argu[1]
                 write_value = request_argu[2]
                 LamportClock.send_message(request_argu)
-                # dependency check
-                dependency_check(client_list)
-                # if satisfy, commit the write request
+                # dependency check   # if satisfy, commit the write request  # if not, delay until get satisfied
+                while dependency_check(cur_datacenter, client_list) == 0:
+                    buf = dict()
+                    buf[write_key] = list(write_value, client_list[1])
+                
+                cur_datacenter.key_value_version[write_key] = list(write_value, client_list[1])
 
-                # if not, delay until get satisfied
+               
+
+                
 
               
                   
@@ -109,11 +115,14 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
             conn.close()
             return 
 
-def dependency_check(client_list):
+def dependency_check(cur_datacenter, client_list):
     print('Processing dependency check now.')
     print('Recieved client_list is', client_list)
-
-    return 1
+    # check if receive the version in client_list
+    if cur_datacenter.key_vlaue_version.get(client_list[0])[1] == client_list[1]:
+        return 1
+    else:
+        return 0
 
 
 
@@ -124,7 +133,7 @@ if __name__ == "__main__":
     '''Initialize the datacenter'''
     cur_ID = input('Please enter current datacenter ID to initialize:')
     cur_datacenter_port = PORT[cur_ID]
-    cur_datacenter = datacenter(cur_ID, cur_datacenter_port, list())
+    cur_datacenter = datacenter(cur_ID, cur_datacenter_port, dict())
     
 
 
