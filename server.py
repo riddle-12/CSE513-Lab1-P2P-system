@@ -31,50 +31,21 @@ class datacenter:
         self.key_vlaue_version = key_value_version # list(list)--(key1,value1,version1), (key2,value2,version2)
         # self.client_lists = client_lists # (???)
 
-class causal_consistency:
-    def __init__(self, filename, chunk_num, chunk_hash, client_ip, client_port):
-        self.filename = filename
-        self.chunk_num = chunk_num
-        self.chunk_hash = chunk_hash
-        self.client_ip = client_ip
-        self.client_port = client_port
-        self.datacenter_id = 0
-        self.causal_consistency_dict = {}
-        self.version_dict = {}
-        self.version_dict[self.filename] = 0   # version number of file
-    def get_version(self, filename):
-        return self.version_dict[filename]
-
-    def update_version(self, filename):
-        self.version_dict[filename] += 1
-        return self.version_dict[filename]
-
-    def k_v_pair(k, v):
-        return k + v
-    
-    def write(key, value):
-        self.causal_consistency_dict[key] = value
-        return self.causal_consistency_dict[key]
-    
-    def read(key):
-        return self.causal_consistency_dict[key]
-        
-    def receive_message(conn, message):
+class LamportClock:
+    def __init__(self):
+        self.time = 0
         global lamport_time
-        lamport_time = message['time']
+
+    def receive_message(message):
+        recv_time = message['time']
+        if recv_time > lamport_time:
+            lamport_time = recv_time
         return message
 
-    def send_message(conn, message):
-        global lamport_time
+    def send_message(message):
         lamport_time += 1
         message['time'] = lamport_time
-        conn.send(pickle.dumps(message))
-    
-    def add_kv_pair(self, k, v):
-        return k + v
-    
-    def get_kv_pair(self, k):
-        return k
+        return message
 
 def Requesthandler(cur_datacenter, conn, addr, client_list):
     print('Enter the handler')
@@ -91,6 +62,7 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                 if cur_datacenter.key_value_version. == None:  ???
                     conn.sendall(pickle.dumps('There is no such key in this datacenter!'))
                 else:
+                    LamportClock.receive_message(request_argu)
                     key_value = cur_datacenter.keyvalue.get(read_key)   ???
                     conn.sendall(pickle.dumps('Read(key=', read_key, ', value=', key_value))
                     version = list(timestamp, cur_datacenter.id) ?????
@@ -100,7 +72,8 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
             if request_argu[0] == 'write': # 'write' write_key write_value
                 write_key = request_argu[1]
                 write_value = request_argu[2]
-                print('Received a write request from client on key =', write_key, 'change value to', write_value)
+                LamportClock.send_message(request_argu)
+                print('Received a write request from client on key =', write_key, 'change value to', write_value,'Lamport Clock Value is', lamport_time)
                 # update the stored key value
                 cur_datacenter.keyvalue[write_key] = write_value
                 # propogate the replicated write request to other datacenter
@@ -121,6 +94,7 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                 client_list = request_argu[3]
                 write_key = request_argu[1]
                 write_value = request_argu[2]
+                LamportClock.send_message(request_argu)
                 # dependency check
                 dependency_check(client_list)
                 # if satisfy, commit the write request
