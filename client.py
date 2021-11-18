@@ -21,12 +21,32 @@ client_port = random.randint(20000, 40000) # client port number
 '''
 For each client: has their own IP addr(32) and port(16).
 '''
+lamport_time = 0
+lamport = {}
+
 class client:
     def __init__(self, IP, port):
         self.ip = IP
         self.port = port
 
+class LamportClock:
+    def __init__(self):
+        self.time = 0 
 
+    def receive_message(message):
+        global lamport_time
+        recv_time = message['time']
+        if recv_time > lamport_time:
+            lamport_time = recv_time
+        return message
+
+    def send_message(message):
+        global lamport_time
+        print('Current time:', lamport_time)
+        lamport_time += 1
+        print('Time is now:', lamport_time)
+        message['time'] = lamport_time
+        return message
 
 '''Main routine and set up socket'''
 if __name__ == "__main__":
@@ -45,11 +65,13 @@ if __name__ == "__main__":
             operation = input('Enter your operation request [write, key, value / read, key]:')
             if operation == 'read':
                 read_key = input('Which key do you want to read?')
-                s.sendall(pickle.dumps((operation,read_key)))
+                lamport = LamportClock.send_message(lamport)
+                s.sendall(pickle.dumps((operation,read_key,lamport)))
                 msg1 = s.recv(2048)
                 print(pickle.loads(msg1))   # get return message from datacenter
             if operation == 'write':
                 write_key = input('Which key:')
                 write_value = input('Which value:')
-                s.sendall(pickle.dumps((operation,write_key,write_value)))
+                lamport = LamportClock.send_message(lamport)
+                s.sendall(pickle.dumps((operation,write_key,write_value,lamport)))
         

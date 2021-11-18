@@ -66,7 +66,7 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                 if cur_datacenter.key_value_version.get(read_key) == None: 
                     conn.sendall(pickle.dumps('There is no such key in this datacenter!'))
                 else:
-                    LamportClock.receive_message(request_argu)
+                    LamportClock.receive_message(request_argu[3])
                     key_value = cur_datacenter.key_value_version.get(read_key)[1]   # ???
                     conn.sendall(pickle.dumps('Read(key=', read_key, ', value=', key_value))
                     version = [lamport_time, cur_datacenter.id]
@@ -76,10 +76,10 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
             if request_argu[0] == 'write': # 'write' write_key write_value
                 write_key = request_argu[1]
                 write_value = request_argu[2]
-                LamportClock.send_message(request_argu)
+                LamportClock.send_message(request_argu[3])
                 print('Received a write request from client on key =', write_key, 'change value to', write_value, 'Lamport Clock Value is', lamport_time)
                 # update the stored key value
-                version = [LamportClock.lamport_time, cur_datacenter.id]
+                version = [lamport_time, cur_datacenter.id]
                 cur_datacenter.key_value_version[write_key] = (write_value, version)
                 # propogate the replicated write request to other datacenter
                 for i in range(len(PORT)):
