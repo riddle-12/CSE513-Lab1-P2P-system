@@ -71,7 +71,8 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                 else:
                     LamportClock.receive_message(request_argu[2])
                     key_value = cur_datacenter.key_value_version.get(read_key)[0] 
-                    key_version = cur_datacenter.key_value_version.get(read_key)[1]   
+                    key_version = cur_datacenter.key_value_version.get(read_key)[1] 
+                    print('requested_key_value_version:', read_key, key_value, key_version)  
                     conn.sendall(pickle.dumps( [read_key, key_value,lamport_time]))
                     
                     client_list.append([read_key, key_version]) 
@@ -90,7 +91,11 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                 # propogate the replicated write request to other datacenter
                 for i in range(len(PORT)):
                     if i != cur_datacenter.id:
-                        delay = abs(cur_datacenter.id - i) * 3
+                        delay = 0
+                        if abs(cur_datacenter.id - i) == 2:
+                            delay = 10
+                        else:
+                            delay = abs(cur_datacenter.id - i) * 2
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as ss:
                             ss.connect((HOST, PORT[i]))
                             print('Successfully connected to another datacenter', i, '!')
@@ -107,6 +112,7 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                 client_list = request_argu[3]
                 write_time = request_argu[4]
                 write_dcId = request_argu[5]
+                print('Received a replicated request from dataserver', write_dcId, ':', request_argu[1:3])
                 # dependency check   # if satisfy, commit the write request  # if not, delay until get satisfied
                 while dependency_check(cur_datacenter, client_list) == 0:
                     print('Dependency condition is not satisfied, wait--')

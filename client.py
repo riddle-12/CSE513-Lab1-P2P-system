@@ -79,7 +79,7 @@ if __name__ == "__main__":
                 msg1 = s.recv(2048)
                 recv = pickle.loads(msg1)
                 LamportClock.update_time(recv[2])
-                print(recv[0],recv[1])   # pickle.dump[a,b] get return message from datacenter
+                print('Read out', recv[0], '=',recv[1])   # pickle.dump[a,b] get return message from datacenter
 
             if operation == 'write':
                 write_key = input('Which key:')
