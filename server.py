@@ -16,6 +16,8 @@ PORT3 = 42020
 size = 128
 PORT = [62000, 62010, 62020]
 
+lamport_time=0
+
 '''
 Datacenter:
 1. store data (key : value)
@@ -30,7 +32,7 @@ class datacenter:
         self.datacenter_port = datacenter_port #current datacenter port number
         self.key_value_version = key_value_version # dict(list)--(key1:(value1,version1), key2:(value2,version2)
         # self.client_lists = client_lists # (???)
-lamport_time=0
+
 class LamportClock:
     def __init__(self):
         self.time = 0 
@@ -40,6 +42,7 @@ class LamportClock:
         recv_time = message['time']
         if recv_time > lamport_time:
             lamport_time = recv_time
+        print('Recieve Lamport Clock of', recv_time)
         return message
 
     def send_message(message):
@@ -76,7 +79,7 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
             if request_argu[0] == 'write': # 'write' write_key write_value
                 write_key = request_argu[1]
                 write_value = request_argu[2]
-                LamportClock.send_message(request_argu[3])
+                LamportClock.receive_message(request_argu[3])
                 print('Received a write request from client on key =', write_key, 'change value to', write_value, 'Lamport Clock Value is', lamport_time)
                 # update the stored key value
                 version = [lamport_time, cur_datacenter.id]
@@ -90,24 +93,29 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                             ss.connect((HOST, PORT[i]))
                             print('Successfully connected to another datacenter', i, '!')
                             time.sleep(1 + i) 
-                            ss.sendall(pickle.dumps(('replicated write request', write_key, write_value, client_list)))
+                            ss.sendall(pickle.dumps(('replicated write request', write_key, write_value, client_list,lamport_time,cur_datacenter.id)))
                             print('Sent out the replicated write request!')
                 # update current client_list
                 client_list = []
                 client_list.append((write_key, version))
 
             if request_argu[0] == 'replicated write request':
-                client_list = request_argu[3]
                 write_key = request_argu[1]
                 write_value = request_argu[2]
+                client_list = request_argu[3]
+                write_time = request_argu[4]
+                write_dcId = request_argu[5]
                 # dependency check   # if satisfy, commit the write request  # if not, delay until get satisfied
                 while dependency_check(cur_datacenter, client_list) == 0:
                     print('Dependency condition is not satisfied, wait--')
                     time.sleep(1)
                     #buf = dict()
                     #buf[write_key] = list(write_value, client_list[1])
+                #if len(client_list) == 0:
+                #    return 1
                 if dependency_check(cur_datacenter, client_list) == 1:
-                    cur_datacenter.key_value_version[write_key] = [write_value, client_list[1]] 
+                    cur_datacenter.key_value_version[write_key] = [write_value, [write_time, write_dcId]]
+                    print(cur_datacenter.key_value_version[write_key])
               
                   
  
@@ -120,7 +128,7 @@ def dependency_check(cur_datacenter, client_list):
     print('Processing dependency check now.')
     print('Recieved client_list is', client_list)
     # check if receive the version in client_list
-    if client_list == None:
+    if len(client_list) == 0:
         return 1
     elif cur_datacenter.key_value_version.get(client_list[0])[1] == client_list[1]:
         return 1
