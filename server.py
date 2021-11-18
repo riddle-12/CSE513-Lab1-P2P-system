@@ -70,11 +70,12 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                     conn.sendall(pickle.dumps('There is no such key in this datacenter!'))
                 else:
                     LamportClock.receive_message(request_argu[2])
-                    key_value = cur_datacenter.key_value_version.get(read_key)[0]   # ???
+                    key_value = cur_datacenter.key_value_version.get(read_key)[0] 
+                    key_version = cur_datacenter.key_value_version.get(read_key)[1]   
                     conn.sendall(pickle.dumps( [read_key, key_value,lamport_time]))
-                    version = [lamport_time, cur_datacenter.id]
-                    client_list.append([read_key, version])
-                    print('Appended', (read_key, version), 'to this client_list!')
+                    #version = [lamport_time, cur_datacenter.id]
+                    client_list.append([read_key, key_version]) 
+                    print('Appended', (read_key, key_version), 'to this client_list!')
 
             if request_argu[0] == 'write': # 'write' write_key write_value
                 write_key = request_argu[1]
@@ -84,15 +85,16 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                 # update the stored key value
                 version = [lamport_time, cur_datacenter.id]
                 print('cur_datacenter,id=', cur_datacenter.id)
-                print('cur_datacenter.key_value_version = ', cur_datacenter.key_value_version)
                 cur_datacenter.key_value_version[write_key] = (write_value, version)
+                print('cur_datacenter.key_value_version = ', cur_datacenter.key_value_version)
                 # propogate the replicated write request to other datacenter
                 for i in range(len(PORT)):
                     if i != cur_datacenter.id:
+                        delay = abs(cur_datacenter.id - i) * 3
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as ss:
                             ss.connect((HOST, PORT[i]))
                             print('Successfully connected to another datacenter', i, '!')
-                            time.sleep(5 + i) 
+                            time.sleep(delay) 
                             ss.sendall(pickle.dumps(('replicated write request', write_key, write_value, client_list,lamport_time,cur_datacenter.id)))
                             print('Sent out the replicated write request!')
                 # update current client_list
@@ -112,7 +114,7 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                 if dependency_check(cur_datacenter, client_list) == 1:
                     print('Dependency condition is satisfied, commit the request!')
                     cur_datacenter.key_value_version[write_key] = [write_value, [write_time, write_dcId]]
-                    print('Local data and version are updated to', cur_datacenter.key_value_version[write_key])
+                    print('Local data and version are updated to', cur_datacenter.key_value_version)
               
                   
  
@@ -124,10 +126,8 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
 def dependency_check(cur_datacenter, client_list):
     print('Processing dependency check now.')
     print('Recieved client_list is', client_list)
-    # check if receive the version in client_list
-    if len(client_list) == 0:
-        return 1
-    else:
+    # check if already received the same version in client_list
+    if client_list:
         key = client_list[0][0]
         print('key =', key)
         value_version = cur_datacenter.key_value_version.get(key)
@@ -136,6 +136,8 @@ def dependency_check(cur_datacenter, client_list):
             return 1
         else:
             return 0
+    else:
+        return 1
 
 
 
