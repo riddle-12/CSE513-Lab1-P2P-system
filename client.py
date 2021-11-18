@@ -22,7 +22,7 @@ client_port = random.randint(20000, 40000) # client port number
 For each client: has their own IP addr(32) and port(16).
 '''
 lamport_time = 0
-lamport = {}
+
 
 class client:
     def __init__(self, IP, port):
@@ -64,14 +64,18 @@ if __name__ == "__main__":
         while True:
             operation = input('Enter your operation request [write, key, value / read, key]:')
             if operation == 'read':
+                print(client_port)
                 read_key = input('Which key do you want to read?')
+                lamport = {}
                 lamport = LamportClock.send_message(lamport)
                 s.sendall(pickle.dumps((operation,read_key,lamport)))
                 msg1 = s.recv(2048)
-                print(pickle.loads(msg1))   # get return message from datacenter
+                print(pickle.loads(msg1))   # pickle.dump[a,b] get return message from datacenter
             if operation == 'write':
                 write_key = input('Which key:')
                 write_value = input('Which value:')
+                print(client_port)
+                lamport = {}
                 lamport = LamportClock.send_message(lamport)
                 s.sendall(pickle.dumps((operation,write_key,write_value,lamport)))
         

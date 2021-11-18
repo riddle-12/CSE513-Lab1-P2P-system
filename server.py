@@ -69,9 +69,9 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                 if cur_datacenter.key_value_version.get(read_key) == None: 
                     conn.sendall(pickle.dumps('There is no such key in this datacenter!'))
                 else:
-                    LamportClock.receive_message(request_argu[3])
+                    LamportClock.receive_message(request_argu[2])
                     key_value = cur_datacenter.key_value_version.get(read_key)[1]   # ???
-                    conn.sendall(pickle.dumps('Read(key=', read_key, ', value=', key_value))
+                    conn.sendall(pickle.dumps( [read_key, key_value]))
                     version = [lamport_time, cur_datacenter.id]
                     client_list.append((read_key, version))
                     print('Appended', (read_key, version), 'to this client_list!')
@@ -88,7 +88,7 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                 cur_datacenter.key_value_version[write_key] = (write_value, version)
                 # propogate the replicated write request to other datacenter
                 for i in range(len(PORT)):
-                    while i != cur_datacenter.id:
+                    if i != cur_datacenter.id:
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as ss:
                             ss.connect((HOST, PORT[i]))
                             print('Successfully connected to another datacenter', i, '!')
