@@ -73,11 +73,11 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                     key_value = cur_datacenter.key_value_version.get(read_key)[0] 
                     key_version = cur_datacenter.key_value_version.get(read_key)[1]   
                     conn.sendall(pickle.dumps( [read_key, key_value,lamport_time]))
-                    #version = [lamport_time, cur_datacenter.id]
+                    
                     client_list.append([read_key, key_version]) 
                     print('Appended', (read_key, key_version), 'to this client_list!')
 
-            if request_argu[0] == 'write': # 'write' write_key write_value
+            if request_argu[0] == 'write': # 'write' write_key write_value lamport_time
                 write_key = request_argu[1]
                 write_value = request_argu[2]
                 LamportClock.receive_message(request_argu[3])
@@ -130,7 +130,7 @@ def dependency_check(cur_datacenter, client_list):
     if client_list:
         key = client_list[0][0]
         print('key =', key)
-        value_version = cur_datacenter.key_value_version.get(key)
+        value_version = cur_datacenter.key_value_version.get(key)   # value, [version]
         print('value_version =', value_version)
         if value_version[1] == client_list[0][1]:
             return 1
