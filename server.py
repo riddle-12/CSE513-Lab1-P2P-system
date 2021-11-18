@@ -14,7 +14,7 @@ PORT1 = 42000 # server's port number
 PORT2 = 42010 
 PORT3 = 42020 
 size = 128
-PORT = [42000, 42010, 42020]
+PORT = [62000, 62010, 2020]
 
 '''
 Datacenter:
@@ -28,7 +28,7 @@ class datacenter:
     def __init__(self, id, datacenter_port, key_value_version):
         self.id = id   # current datacenter ID
         self.datacenter_port = datacenter_port #current datacenter port number
-        self.key_vlaue_version = key_value_version # dict(list)--(key1:(value1,version1), key2:(value2,version2)
+        self.key_value_version = key_value_version # dict(list)--(key1:(value1,version1), key2:(value2,version2)
         # self.client_lists = client_lists # (???)
 lamport_time=0
 class LamportClock:
@@ -80,6 +80,8 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                 print('Received a write request from client on key =', write_key, 'change value to', write_value, 'Lamport Clock Value is', lamport_time)
                 # update the stored key value
                 version = [lamport_time, cur_datacenter.id]
+                print('cur_datacenter,id=', cur_datacenter.id)
+                print('cur_datacenter.key_value_version = ', cur_datacenter.key_value_version)
                 cur_datacenter.key_value_version[write_key] = (write_value, version)
                 # propogate the replicated write request to other datacenter
                 for i in range(len(PORT)):
@@ -134,6 +136,7 @@ if __name__ == "__main__":
     cur_datacenter_port = PORT[cur_ID]
     tmp = {'x': (0, [0, cur_ID]), 'y': (0, [0, cur_ID]), 'z': (0, [0, cur_ID])}
     cur_datacenter = datacenter(cur_ID, cur_datacenter_port, tmp)
+    print('cur_datacenter.key_value_version = ', cur_datacenter.key_value_version)
 
     '''create a server socket to listen on'''
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
