@@ -93,9 +93,9 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                     if i != cur_datacenter.id:
                         delay = 0
                         if abs(cur_datacenter.id - i) == 2:
-                            delay = 10
+                            delay = 15
                         else:
-                            delay = abs(cur_datacenter.id - i) * 2
+                            delay = abs(cur_datacenter.id - i)
                         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as ss:
                             ss.connect((HOST, PORT[i]))
                             print('Successfully connected to another datacenter', i, '!')

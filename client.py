@@ -69,7 +69,7 @@ if __name__ == "__main__":
         print('Successfully connected to datacenter', datacenter_id, '!')
 
         while True:
-            operation = input('Enter your operation request [write, key, value / read, key]:')
+            operation = input('Enter your operation request [write / read]:')
             if operation == 'read':
                 print(client_port)
                 read_key = input('Which key do you want to read?')
