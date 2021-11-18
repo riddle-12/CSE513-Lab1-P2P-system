@@ -14,7 +14,7 @@ PORT1 = 42000 # server's port number
 PORT2 = 42010 
 PORT3 = 42020 
 size = 128
-PORT = [62000, 62010, 2020]
+PORT = [62000, 62010, 62020]
 
 '''
 Datacenter:
@@ -120,7 +120,9 @@ def dependency_check(cur_datacenter, client_list):
     print('Processing dependency check now.')
     print('Recieved client_list is', client_list)
     # check if receive the version in client_list
-    if cur_datacenter.key_value_version.get(client_list[0])[1] == client_list[1]:
+    if client_list == None:
+        return 1
+    elif cur_datacenter.key_value_version.get(client_list[0])[1] == client_list[1]:
         return 1
     else:
         return 0
