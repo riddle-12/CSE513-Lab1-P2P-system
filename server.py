@@ -120,7 +120,7 @@ def dependency_check(cur_datacenter, client_list):
     print('Processing dependency check now.')
     print('Recieved client_list is', client_list)
     # check if receive the version in client_list
-    if cur_datacenter.key_vlaue_version.get(client_list[0])[1] == client_list[1]:
+    if cur_datacenter.key_value_version.get(client_list[0])[1] == client_list[1]:
         return 1
     else:
         return 0
@@ -134,7 +134,7 @@ if __name__ == "__main__":
     '''Initialize the datacenter'''
     cur_ID = int(input('Please enter current datacenter ID to initialize:'))
     cur_datacenter_port = PORT[cur_ID]
-    tmp = {'x': (0, [0, cur_ID]), 'y': (0, [0, cur_ID]), 'z': (0, [0, cur_ID])}
+    tmp = {'x': [0, [0, cur_ID]], 'y': [0, [0, cur_ID]], 'z': [0, [0, cur_ID]]}
     cur_datacenter = datacenter(cur_ID, cur_datacenter_port, tmp)
     print('cur_datacenter.key_value_version = ', cur_datacenter.key_value_version)
 

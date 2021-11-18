@@ -12,7 +12,7 @@ SERVER_HOST = '127.0.0.1'  # server's host address
 SERVER_PORT1 = 42000 # server's port number
 SERVER_PORT2 = 42010 
 SERVER_PORT3 = 42020
-SERVER_PORT = [42000, 42010, 42020] 
+SERVER_PORT = [62000, 62010, 2020] 
 
 #client_port = 43000
 client_hostname = socket.gethostname() # client hostname
