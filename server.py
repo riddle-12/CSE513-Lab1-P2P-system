@@ -71,7 +71,7 @@ def Requesthandler(cur_datacenter, conn, addr, client_list):
                 else:
                     LamportClock.receive_message(request_argu[2])
                     key_value = cur_datacenter.key_value_version.get(read_key)[0]   # ???
-                    conn.sendall(pickle.dumps( [read_key, key_value]))
+                    conn.sendall(pickle.dumps( [read_key, key_value,lamport_time]))
                     version = [lamport_time, cur_datacenter.id]
                     client_list.append([read_key, version])
                     print('Appended', (read_key, version), 'to this client_list!')

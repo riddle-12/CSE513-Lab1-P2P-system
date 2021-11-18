@@ -47,6 +47,13 @@ class LamportClock:
         print('Time is now:', lamport_time)
         message['time'] = lamport_time
         return message
+    
+    def update_time(time):
+        global lamport_time
+        print('server time is:', time)
+        if time>lamport_time:
+            lamport_time = time
+            
 
 '''Main routine and set up socket'''
 if __name__ == "__main__":
@@ -70,7 +77,10 @@ if __name__ == "__main__":
                 lamport = LamportClock.send_message(lamport)
                 s.sendall(pickle.dumps((operation,read_key,lamport)))
                 msg1 = s.recv(2048)
-                print(pickle.loads(msg1))   # pickle.dump[a,b] get return message from datacenter
+                recv = pickle.loads(msg1)
+                LamportClock.update_time(recv[2])
+                print(recv[0],recv[1])   # pickle.dump[a,b] get return message from datacenter
+
             if operation == 'write':
                 write_key = input('Which key:')
                 write_value = input('Which value:')
